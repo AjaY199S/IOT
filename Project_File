@@ -1,0 +1,71 @@
+import RPi.GPIO as GPIO
+import dht11
+import time
+from firebase import firebase
+
+# initialize GPIO
+GPIO.setmode(GPIO.BCM)
+
+# DHT Sensor Pin setup
+dht_pin = 14
+GPIO.setup(dht_pin, GPIO.IN)
+dht_return = dht11.DHT11(dht_pin)
+
+# Soil Sensor pin Setup
+Soil_pin = 15
+GPIO.setup(Soil_pin, GPIO.IN)
+
+# Relay Pin Setup
+Relay_pin = 18
+GPIO.setup(Relay_pin, GPIO.OUT)
+
+# Firebase Setup fore Cloud Realtime Databse
+firebase = firebase.FirebaseApplication('https://smart-irrigation-system-3483d.firebaseio.com/', None )
+
+# Local Variablle intisializetion
+Local_Motor_Status = 0;
+
+# Whie Loop Start 
+while True:
+    # Step 1: Reading data from sensors
+    dht_result = dht_return.read()
+    
+    humidity = dht_result.humidity
+    temp =  dht_result.temperature
+    #soil = analogRead();
+    
+    # Step 2: Chechking Sensore Read Data or not
+    if dht_result.is_valid():
+	print("Temperature: %-3.1f C" % temp)
+	print("Humidity: %-3.1f %%" % humidity)
+	#print("Soil Moisture: %-3.1f %%" % soil)
+    else :
+        print("Fail to Sensor reading Data")
+            
+    # Step 3 : Sensore Readed Data Send on Firebase
+    firebase.put('/Rasp/','Temp',temp)
+    firebase.put('/Rasp/','Humidity',humidity)
+    firebase.put('/Rasp/','Soil_moisture',soil)
+    firebase.put('/Rasp/','Local_Motor_Status',Local_Motor_Status)
+
+    # Step 4: Menually Motor ON/OFF
+    Web_Motor_Status  = firebase.get('/Rasp/Motor_state', '')
+    if Web_Motor_Status == 0 :
+        GPIO.output(Relay_pin, GPIO.LOW)            # Motor OFF
+        Local_Motor_Status = 0
+    else if Web_Motor_Status = 1 :
+        GPIO.output(Relay_pin, GPIO.HIGH)           # Motor ON
+        Local_Motor_Status = 1
+        
+    # Step 5 : Condition For Auto Mode Motor    
+    else if Web_Motor_Status = 2 : 
+        if humidity <= 60 and humidity >= 140 or temp <=5 and temp >= 40 or soil <= 10 :
+            GPIO.output(Relay_pin, GPIO.HIGH)       # Motor ON
+            Local_Motor_Status = 1
+        else :
+            GPIO.output(Relay_pin, GPIO.LOW)        # Motor OFF
+            Local_Motor_Status = 0
+
+    # Step 6: Time delay 1 second      
+    time.sleep(1)
+# Whie Loop End 
