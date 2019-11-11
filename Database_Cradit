@@ -4,3 +4,17 @@ Auth Secr : LlVDqZCt3suDnJuRHwBXvCatuuHUFG256hqGLsBi
 link : https://github.com/varul29/SHT31-IOT-Firebase/blob/master/SHT31_Firebase.py
 
 link  2: https://github.com/amphancm/Raspberrypi_Firebase
+
+Setup for 
+
+step 1:
+sudo apt-get update
+sudo apt-get upgrade
+
+// for adafruit library
+git clone https://github.com/adafruit/Adafruit_Python_DHT.git
+cd Adafruit_Python_DHT
+
+// for firebase library
+pip install requests
+pip install python-firebase
